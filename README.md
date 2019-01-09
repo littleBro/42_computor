@@ -6,11 +6,18 @@ Computor_v1
 
 Prepare: 
 ```
-./install
+# Install python if necessary
+brew install python
+
+pip3 install virtualenv
+virtualenv venv
 ```
 
 Launch: 
 ```
+# Activate virtualenv
+source venv/bin/activate
+
 # With an argument
 ./computor_v1.py "x^2 = 4"
 

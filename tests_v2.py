@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 TODO:
 Assignment of an expression to a variable by type inference
@@ -24,6 +26,7 @@ Polynomials:
 - negative rational powers (attention with 0!)
 - big degrees (bisection)
 - x^0.83
+- x/x
 """
 
 import unittest

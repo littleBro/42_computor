@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 TODO:
 - divide
@@ -24,8 +26,8 @@ D_POSITIVE = "Discriminant is strictly positive, the two solutions are:"
 D_NEGATIVE = "Discriminant is strictly negative, the two solutions are:"
 D_ZERO = "Discriminant is zero, the solution is:"
 D_NONE = "The solution is:"
-ALL_NUMBERS = "All real numbers are solutions."
-NO_SOLUTION = "This equation has no solutions in our world."
+ALL_NUMBERS = "All real numbers are solutions"
+NO_SOLUTION = "This equation has no solutions in our world"
 
 ERROR_BIG_DEGREE = "The polynomial degree is strictly greater than 2, I can't solve."
 ERROR_NON_NATURAL_DEGREE = "Cannot solve polynomials with non-natural degrees"

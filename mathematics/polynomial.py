@@ -9,6 +9,7 @@ from itertools import groupby
 from numbers import Number
 
 from mathematics import is_integer
+from mathematics.exceptions import MathError
 from mathematics.numbers import AnyRealNumber, Complex
 from parser.exceptions import ResolveError
 
@@ -20,7 +21,7 @@ class Polynomial:
     For the 25 + 3x - x^2 polynomial there will be following data structure:
 
     terms: [
-        Term(25, [Variable('x', 0)]),
+        Term(25, []),
         Term(3, [Variable('x', 1)]),
         Term(-1, [Variable('x', 2)]),
     ]
@@ -37,19 +38,21 @@ class Polynomial:
             elif isinstance(make_from, Number):
                 self.terms = [Term(coeff=make_from, variables=[])]
             else:
-                raise TypeError('Cannot build a polynomial object from {}'.format(make_from))
+                raise TypeError("Cannot build a polynomial object from {}".format(make_from))
         elif terms:
             self.terms = terms
+        else:
+            raise TypeError("Could not build a polynomial object")
 
     @property
     def terms_normalized(self):
-        return [
+        return [term for term in [
             Term(coeff=reduce(lambda a, x: a + x.coeff, list(group), 0), variables=key)
             for key, group in groupby(
-                iterable=sorted([x for x in self.terms if x.coeff != 0], key=lambda x: x.variables),
-                key=lambda x: x.variables
+                iterable=sorted([x for x in self.terms if x.coeff != 0], key=lambda x: x.variables_normalized),
+                key=lambda x: x.variables_normalized
             )
-        ]
+        ] if term.coeff != 0]
 
     def get_term(self, degree):
         try:
@@ -137,14 +140,20 @@ class Polynomial:
     def __rmul__(self, other):
         return self * other
 
-    def __truediv__(self, other):  # TODO
-        try:
-            if isinstance(other, Number):
-                return Polynomial(terms=[
-                    Term(coeff=coeff / other, variables=variables) for coeff, variables in self.terms
-                ])
-        except:
-            return NotImplemented
+    def __truediv__(self, other):
+        if isinstance(other, Number):
+            return Polynomial(terms=[
+                Term(coeff=coeff / other, variables=variables) for coeff, variables in self.terms
+            ])
+        elif isinstance(other, Polynomial):
+            if len(other.terms_normalized) == 0:
+                raise ZeroDivisionError()
+            if len(other.terms_normalized) > 1:
+                raise MathError('Cannot divide by a polynomial with multiple terms')
+
+            return Polynomial(terms=[term / other.terms[0] for term in self.terms])
+        else:
+            return self.__truediv__(Polynomial(other))
 
     # String representation
 
@@ -154,7 +163,7 @@ class Polynomial:
             space='' if index == 0 else ' ',
             coeff=abs(term.coeff) if not (abs(term.coeff) == 1 and term.variables and term.degree != 0) else '',  # TODO
             asterisk=' * ' if abs(term.coeff) != 1 and term.variables and term.degree != 0 else '',
-            variables=' * '.join([str(variable) for variable in term.variables if variable.degree != 0]),
+            variables=' * '.join([str(variable) for variable in term.variables_normalized]),
         ) for index, term in enumerate(self.terms_normalized)]) or '0'
 
     @property
@@ -172,7 +181,13 @@ class Polynomial:
 
             elif self.degree == 0:
                 if isinstance(self.resolve(), AnyRealNumber):
-                    solution = "All real numbers are solutions."
+                    solution = "All real numbers are solutions"
+                    exceptions = list(set([variable.name
+                                           for term in self.terms
+                                           for variable in term.variables
+                                           if variable.degree < 0]))
+                    if exceptions:
+                        solution += ", except " + ', '.join(['{}=0'.format(x) for x in exceptions])
                 else:
                     solution = "This equation has no solutions in our world."
 
@@ -203,23 +218,50 @@ class Term(namedtuple('Term', ['coeff', 'variables'])):
                     for variable in self.variables
                     if not is_integer(variable.degree) or variable.degree < 0]) > 0
 
+    @property
+    def variables_normalized(self):
+        return [variable for variable in [
+            Variable(name=key, degree=reduce(lambda a, x: a + x.degree, list(group), 0))
+            for key, group in groupby(
+                iterable=sorted([x for x in self.variables if x.degree != 0], key=lambda x: x.name),
+                key=lambda x: x.name
+            )
+        ] if variable.degree != 0]
+
     # Math operations (left- and right-hand)
 
     def __mul__(self, other):
         if isinstance(other, Term):
-            coeff = self.coeff * other.coeff
-            variables = [
-                Variable(name=key, degree=reduce(lambda a, x: a + x.degree, list(group), 0))
-                for key, group in groupby(
-                    sorted(self.variables + other.variables, key=lambda x: x.name),
-                    key=lambda x: x.name
-                )
-            ]
-            return Term(coeff, variables)
+            return Term(
+                coeff=self.coeff * other.coeff,
+                variables=self.variables + other.variables
+            )
+            # coeff = self.coeff * other.coeff
+            # variables = [
+            #     Variable(name=key, degree=reduce(lambda a, x: a + x.degree, list(group), 0))
+            #     for key, group in groupby(
+            #         sorted(self.variables + other.variables, key=lambda x: x.name),
+            #         key=lambda x: x.name
+            #     )
+            # ]
+            # return Term(coeff, variables)
         return NotImplemented
 
     def __rmul__(self, other):
         return self.__mul__(other)
+
+    def __truediv__(self, other):
+        if isinstance(other, Term):
+            return Term(
+                coeff=self.coeff / other.coeff,
+                variables=self.variables + [
+                    Variable(name=x.name, degree=-x.degree) for x in other.variables
+                ]
+            )
+        return NotImplemented
+
+    def __rtruediv__(self, other):
+        return NotImplemented
 
 
 class Variable(namedtuple('Variable', ['name', 'degree'])):
