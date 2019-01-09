@@ -272,7 +272,7 @@ class Variable(namedtuple('Variable', ['name', 'degree'])):
         return Polynomial(self) + other
 
     def __radd__(self, other):
-        return Polynomial(self) + other
+        return self.__add__(other)
 
     def __sub__(self, other):
         return Polynomial(self) - other
@@ -284,10 +284,13 @@ class Variable(namedtuple('Variable', ['name', 'degree'])):
         return Polynomial(self) * other
 
     def __rmul__(self, other):
-        return Polynomial(self) * other
+        return self.__mul__(other)
 
     def __truediv__(self, other):
         return Polynomial(self) / other
+
+    def __rtruediv__(self, other):
+        return Polynomial(other) / self
 
     def __pow__(self, power, modulo=None):
         if isinstance(power, Number):

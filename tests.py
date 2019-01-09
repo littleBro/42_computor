@@ -2,10 +2,7 @@
 
 """
 TODO:
-- divide
-- variable division (x + 1) / (x - 1)
 - format of complex solutions
-- reduced form = divide ? 4x + 12x^2 = 8 or x + 3x^2 = 2 ?
 - solve all TODOs
 - review symbols
 - write comments
@@ -260,6 +257,19 @@ class TestComputor(unittest.TestCase):
                     REDUCED.format('-25 + x^-1 - x^2 = 0'),
                     DEGREE.format(2),
                     ERROR_NON_NATURAL_DEGREE,
+                ]
+            },
+        ]
+        self.run_tests(tests)
+
+    def test_variable_division(self):
+        tests = [
+            {
+                'input': 'x/x=1',
+                'messages': [
+                    REDUCED.format('0 = 0'),
+                    DEGREE.format(0),
+                    'All real numbers are solutions, except x=0',
                 ]
             },
         ]
