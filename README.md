@@ -1,12 +1,14 @@
 Computor
 ========
 
+A simple yet powerful mathematics expressions interpreter made for the 42 software engineering school.
+
 Computor_v1
 -----------
 
 Prepare: 
 ```
-# Install python if necessary
+# Install python if necessary, the required version is 3.6+
 brew install python
 
 pip3 install virtualenv
@@ -31,19 +33,17 @@ Bonuses:
 - natural form input
 - natural form output
 - input error management
-- parentheses
-- division operator
+- parentheses handling: `(2 + 3) * x ^ (1+1) = 0`
+- division operator: `2/3 * x = x^2 / 10`
+- products and powers of polynomials: `(x + 5)^2 + (x - 5)^2 = 0`
 
 Parsing
 -------
 
 The Computor uses the [Top Down Operator Precedence](https://en.wikipedia.org/wiki/Pratt_parser) parsing algorithm, also called Pratt parser.
-It's particularly suitable for language interpreters. Its strong points are:
-- Great modularity
-- Clear code
-- ...
 
-Pratt’s algorithm associates semantics with tokens instead of grammar rules, and uses a simple “binding power” mechanism to handle precedence levels. Traditional recursive-descent parsing is then used to handle odd or irregular portions of the syntax.
+
+It associates semantics with tokens instead of grammar rules, and uses a simple “binding power” mechanism to handle precedence levels. Traditional recursive-descent parsing is then used to handle odd or irregular portions of the syntax.
 
 [Top Down Operator Precedence](https://tdop.github.io/) by Vaughan R. Pratt (1973)
 

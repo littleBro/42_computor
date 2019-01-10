@@ -1,19 +1,3 @@
-"""
-Resolve algo:
-if = is present
-    if left is function
-        ignore variables
-        check that at right there is only one variable matching that of the function
-        assign (handle the scope, don't mix later)
-    elif left is variable (and right is not polynomial)
-        substitute variables on the right
-        resolve right, assign
-    else
-        resolve as Polynome_left - Polynome_right = 0
-else
-    substitute variables
-    resolve
-"""
 import re
 
 import mathematics
@@ -36,12 +20,12 @@ default_functions = {
 
 class Computor:
     """
-    Mathematics language interpreter
+    Mathematics language interpreter using the Top-down operator precedence parsing algorithm.
     """
     def __init__(self, symbols=default_symbols, functions=default_functions):
         self.symbols = {x.id(): x for x in symbols}
         self.functions = functions
-        self.token_regex = r'\s*' + r'|'.join([r'(?P<{}>{})'.format(x.id(), x.pattern) for x in symbols])
+        self.token_regex = r'\s*' + r'|'.join([f'(?P<{x.id()}>{x.pattern})' for x in symbols])
         self.tokens = []
         self.variables = {}
         self.text = None
@@ -50,6 +34,11 @@ class Computor:
         self.result = None
 
     def tokenize(self):
+        """
+        Tokenize self.text and assign two attributes:
+        - self.tokens — list of all token instances found in the text
+        - self.tokens_queue — state-maintaining iterator through self.tokens
+        """
         try:
             self.tokens = [
                 self.symbols[match.lastgroup](self, match.group(match.lastgroup))
@@ -61,24 +50,50 @@ class Computor:
         except KeyError:
             raise SyntaxError("Unknown operator")
 
-    def expression(self, rbp=0):
-        t = self.current_token
-        self.current_token = next(self.tokens_queue)
-        left = t.nud()
-        while rbp < self.current_token.lbp:
-            t = self.current_token
-            self.current_token = next(self.tokens_queue)
-            left = t.led(left)
-        return left
-
     def advance(self, to_class):
+        """
+        Advance to the next token of given type and return the intermediate result,
+        useful for handling parentheses
+        """
         expr = self.expression()
         if self.current_token.id() != to_class.id():
-            raise SyntaxError("Expected {}".format(to_class.id()))
+            raise SyntaxError(f"Expected {to_class.id()}")
         self.current_token = next(self.tokens_queue)
         return expr
 
+    def expression(self, prev_bp=0):
+        """
+        Recursive parsing and interpreting function.
+
+        The prev_bp (previous binding power) parameter means the precedence level of the previous context.
+        We will continue interpreting tokens while current binding power stays higher than the previous,
+        then return the result to caller.
+
+        Token classes with their semantics are defined in the parser.symbols module.
+        Each token has two different modes of interpretation:
+
+        1) prefix method returns a value for bare or prefix token position, e.g.:
+            - [NUMBER]: NUMBER.prefix() will just return the token value
+            - [MINUS, EXPRESSION]: MINUS.prefix() will evaluate the following EXPRESSION (next recursion level)
+              and return its negated result
+
+        2) infix method returns a value for postfix or infix token position, e.g.:
+            - [..., FACTORIAL]: FACTORIAL.infix() will  receive the result of previous computations
+              and return its computed factorial
+            - [..., PLUS, EXPRESSION]: PLUS.infix() will receive the result of previous computations,
+              evaluate the following EXPRESSION and return the sum
+        """
+        t = self.current_token
+        self.current_token = next(self.tokens_queue)
+        left = t.prefix()
+        while prev_bp < self.current_token.bp:
+            t = self.current_token
+            self.current_token = next(self.tokens_queue)
+            left = t.infix(left)
+        return left
+
     def parse(self, text):
+        """Parse and interpret current string, storing the result to self.result"""
         self.result = None
         self.text = text
         self.tokenize()
@@ -87,9 +102,10 @@ class Computor:
 
         if not isinstance(self.current_token, End):
             self.result = None
-            raise SyntaxError("Unexpected token {}".format(self.current_token.id()))
+            raise SyntaxError(f"Unexpected token {self.current_token.id()}")
 
     def run(self, s=None, interactive=True):
+        """Run the interpreter with user input and error handling"""
         while True:
             try:
                 if interactive:
@@ -101,18 +117,18 @@ class Computor:
                 print(self.result.solution_text if isinstance(self.result, Polynomial) else self.result)
 
             except (MathError, ResolveError, ZeroDivisionError) as e:
-                print("Could not compute: {}".format(e))
+                print(f"Could not compute: {e}")
             except TypeError:
                 print("Could not compute: unsupported operation")
             except SyntaxError as e:
-                print("You have an error in your syntax: {}".format(e))
+                print(f"You have an error in your syntax: {e}")
             except StopIteration:
                 print("Could not parse: unexpected end of expression. Did you forget something?")
             except (EOFError, KeyboardInterrupt):
                 print("\nBye!")
                 break
-            # except Exception:
-            #     print("Could not deal with it, please check your syntax")
+            except Exception:
+                print("Could not deal with it, please check your syntax")
             finally:
                 if not interactive:
                     break

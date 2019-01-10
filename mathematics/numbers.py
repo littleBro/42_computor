@@ -2,11 +2,16 @@
 Home-made number data types
 """
 from numbers import Number
-from mathematics import abs, is_integer, parse_number, bisection, round
+from mathematics import abs, is_integer, parse_number, bisection
 from mathematics.exceptions import MathError
 
 
 class Complex(Number):
+    """
+    This class represents complex number data type.
+    All other number types are its subclasses.
+    Its real and imaginary parts are stored as python native int or float numbers
+    """
     def __init__(self, real=0, imag=0):
         self.real = parse_number(real)
         self.imag = parse_number(imag)
@@ -92,8 +97,8 @@ class Complex(Number):
     def __truediv__(self, other):
         if isinstance(other, Complex):
             return Complex(
-                real=round((self.real * other.real + self.imag * other.imag) / (other.real ** 2 + other.imag ** 2)),
-                imag=round((self.imag * other.real - self.real * other.imag) / (other.real ** 2 + other.imag ** 2))
+                real=(self.real * other.real + self.imag * other.imag) / (other.real ** 2 + other.imag ** 2),
+                imag=(self.imag * other.real - self.real * other.imag) / (other.real ** 2 + other.imag ** 2)
             )
         elif isinstance(other, Number):
             return self.__truediv__(Complex(other))
@@ -102,8 +107,8 @@ class Complex(Number):
     def __rtruediv__(self, other):
         if isinstance(other, Complex):
             return Complex(
-                real=round((other.real * self.real + other.imag * self.imag) / (self.real ** 2 + self.imag ** 2)),
-                imag=round((other.imag * self.real - other.real * self.imag) / (self.real ** 2 + self.imag ** 2))
+                real=(other.real * self.real + other.imag * self.imag) / (self.real ** 2 + self.imag ** 2),
+                imag=(other.imag * self.real - other.real * self.imag) / (self.real ** 2 + self.imag ** 2)
             )
         elif isinstance(other, Number):
             return self.__rtruediv__(Complex(other))
@@ -125,13 +130,13 @@ class Complex(Number):
                 if power > 1:
                     return self * self.__pow__(power - 1)
                 if power < 0:
-                    return round(Complex(1) / self.__pow__(-power))
+                    return Complex(1) / self.__pow__(-power)
             elif power == 0.5 and not self.imag:
                 n = abs(self.real)
 
                 # We will use the bisection algorithm to find the roots
                 # of the x^2 - n = 0 equation on the interval from 0 to n
-                root = round(bisection(lambda x: x * x - n, 0, n))
+                root = bisection(lambda x: x * x - n, 0, n)
                 return Complex(real=root) if self.real >= 0 else Complex(imag=root)
         except RecursionError:
             raise MathError('Too big power')
@@ -147,12 +152,14 @@ class Complex(Number):
     # String representation
 
     def __str__(self):
-        return '{real}{sign}{imag}{i}'.format(
-            real=self.real if self.real or not self.imag else '',
-            sign='' if not (self.real and self.imag) else ' + ' if self.imag > 0 else ' - ',
-            imag=self.imag if not self.real and self.imag else abs(self.imag) if self.imag else '',
-            i='i' if self.imag else ''
-        )
+        if not self.imag:
+            return f"{self.real:g}"
+        elif not self.real:
+            return f"{self.imag:g}i"
+        elif self.imag > 0:
+            return f"{self.real:g} + {self.imag:g}i"
+        else:
+            return f"{self.real:g} - {abs(self.imag):g}i"
 
 
 class Real(Complex):

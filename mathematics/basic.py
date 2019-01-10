@@ -1,7 +1,7 @@
 """
 Basic math operations
 """
-from mathematics import DEFAULT_PRECISION
+from mathematics import DEFAULT_ERROR
 
 
 def abs(a):
@@ -30,7 +30,7 @@ def parse_number(n):
         return parse_number(float(n))
 
 
-def round(n, precision=DEFAULT_PRECISION):
+def round(n, precision=DEFAULT_ERROR):
     """Round 1.9999999 to 2 if necessary, regarding the precision"""
     n = parse_number(n)
     sign = -1 if n < 0 else 1

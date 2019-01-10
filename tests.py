@@ -1,15 +1,5 @@
 #!/usr/bin/env python
 
-"""
-TODO:
-- format of complex solutions
-- solve all TODOs
-- review symbols
-- write comments
-- review line lengths
-- uncomment broad exception handling
-"""
-
 import unittest
 
 from computor_v1 import symbols
@@ -42,7 +32,7 @@ class TestComputor(unittest.TestCase):
 
     def run_tests(self, tests):
         for test in tests:
-            print('\n' + test['input'])
+            print(f"\n\n{test['input']}")
             output = self.compute(test['input'])
 
             for message in test['messages']:
@@ -84,8 +74,8 @@ class TestComputor(unittest.TestCase):
                     REDUCED.format('4 + 3 * X + 3 * X^2 = 0'),
                     DEGREE.format(2),
                     D_NEGATIVE,
-                    '-0.5 + 1.040832', 'i',
-                    '-0.5 - 1.040832', 'i',
+                    '-0.5 + 1.04083i',
+                    '-0.5 - 1.04083i',
                 ]
             },
         ]
@@ -204,8 +194,8 @@ class TestComputor(unittest.TestCase):
                     REDUCED.format('4 + 3 * x + 3 * x^2 = 0'),
                     DEGREE.format(2),
                     D_NEGATIVE,
-                    '-0.5 + 1.040832', 'i',
-                    '-0.5 - 1.040832', 'i',
+                    '-0.5 + 1.04083i',
+                    '-0.5 - 1.04083i',
                 ]
             },
         ]
@@ -270,6 +260,31 @@ class TestComputor(unittest.TestCase):
                     REDUCED.format('0 = 0'),
                     DEGREE.format(0),
                     'All real numbers are solutions, except x=0',
+                ]
+            },
+            {
+                'input': '2/3 * x = x^2 / 10',
+                'messages': [
+                    REDUCED.format('0.666667 * x - 0.1 * x^2 = 0'),
+                    DEGREE.format(2),
+                    D_POSITIVE,
+                    '1.11111',
+                    '5.55556',
+                ]
+            },
+        ]
+        self.run_tests(tests)
+
+    def test_powers(self):
+        tests = [
+            {
+                'input': '(x + 5)^2 + (x - 5)^2 = 0',
+                'messages': [
+                    REDUCED.format('50 + 2 * x^2 = 0'),
+                    DEGREE.format(2),
+                    D_NEGATIVE,
+                    '5i',
+                    '-5i',
                 ]
             },
         ]

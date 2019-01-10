@@ -1,8 +1,8 @@
-from mathematics import DEFAULT_PRECISION, DEFAULT_ITERATIONS
+from mathematics import DEFAULT_ERROR, DEFAULT_ITERATIONS
 from mathematics.exceptions import MathError
 
 
-def bisection(fn, a, b, precision=DEFAULT_PRECISION, max_iterations=DEFAULT_ITERATIONS):
+def bisection(fn, a, b, precision=DEFAULT_ERROR, max_iterations=DEFAULT_ITERATIONS):
     """
     This function finds an equation root on the given interval,
     using the bisection (i.e. binary search, dichotomy) method.
@@ -25,4 +25,4 @@ def bisection(fn, a, b, precision=DEFAULT_PRECISION, max_iterations=DEFAULT_ITER
         else:
             a = mid
 
-    raise MathError('Could not found any solution in {} iterations'.format(max_iterations))
+    raise MathError(f"Could not found any solution in {max_iterations} iterations")

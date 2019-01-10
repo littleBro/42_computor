@@ -1,33 +1,5 @@
 #!/usr/bin/env python
 
-"""
-TODO:
-Assignment of an expression to a variable by type inference
-Reassignment of an existing variable with an expression of another type
-Assignment of a variable to another variable (existing or not)
-Resolution of a mathematical expression with or without defined variable (s)
-Resolution of an equation of degree less than or equal to 2
-Operations between types, as much as possible
-Rational numbers (for any x ∈ Q)
-Imaginary numbers for any x = a + ib such as (a, b) ∈ Q^2
-Matrices
-Functions
-Variable reassign
-Variable types, type inference
-needle and p.9 strange synthax
-multiple solutions (operations on tuples?)
-abs of complex numbers with imag
-variable reassignment
-in case of error (e.g. zero division), check variables to not have changed
-- unicode names?
-
-Polynomials:
-- positive rational powers
-- negative rational powers (attention with 0!)
-- big degrees (bisection)
-- x^0.83
-"""
-
 import unittest
 
 from computor_v1 import symbols

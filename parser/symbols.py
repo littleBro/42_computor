@@ -1,9 +1,9 @@
 """
 Symbol classes incorporating grammar and semantics.
 
-lbp: left binding power
-nud: value returned when the symbol isn't left preceded (i.e. in bare or prefix position, e.g. x, -5)
-led: value returned when the symbol is left preceded (i.e. in infix or suffix position, e.g. 5 - 2, x!)
+bp: binding power
+prefix: value returned when the symbol isn't left preceded (i.e. in bare or prefix position, e.g. x, -5)
+infix: value returned when the symbol is left preceded (i.e. in infix or suffix position, e.g. 5 - 2, x!)
 """
 from mathematics.numbers import Real, Complex
 from parser.exceptions import ResolveError
@@ -11,18 +11,19 @@ from mathematics.polynomial import Polynomial, Variable
 
 
 class Symbol:
+    """Parent class for all symbols"""
     pattern = None
-    lbp = 0
+    bp = 0
 
     @classmethod
     def id(cls):
         return cls.__name__.upper()
 
-    def nud(self):
-        raise SyntaxError('{} symbol does not support prefix position'.format(self.id()))
+    def prefix(self):
+        raise SyntaxError(f"{self.id()} symbol does not support prefix position")
 
-    def led(self, left):
-        raise SyntaxError('{} symbol does not support infix position'.format(self.id()))
+    def infix(self, left):
+        raise SyntaxError(f"{self.id()} symbol does not support infix position")
 
 
 # Literals
@@ -35,17 +36,17 @@ class Literal(Symbol):
     def clear(self, value):
         return value
 
-    def nud(self):
+    def prefix(self):
         return self.value
 
     def __repr__(self):
-        return "({} {})".format(self.id(), self.value)
+        return f"({self.id()} {self.value})"
 
 
 class Name(Literal):
     pattern = r'[a-zA-Z]+'
 
-    def nud(self):
+    def prefix(self):
         if self.value.lower() in self.parser.variables:
             return self.parser.variables[self.value.lower()]
         elif [x for x in self.parser.tokens if isinstance(x, Equals)]:
@@ -53,16 +54,16 @@ class Name(Literal):
             self.parser.variables[self.value.lower()] = variable
             return variable
 
-        raise ResolveError('Variable {} is not defined'.format(self.value))
+        raise ResolveError(f"Variable {self.value} is not defined")
 
-    def led(self, left):
-        return self.nud()
+    def infix(self, left):
+        return self.prefix()
 
 
 class FunctionName(Literal):
     pattern = r'[a-zA-Z]+\('
 
-    def nud(self):
+    def prefix(self):
         # Interpreting:
         # get value from the parentheses
         # next token == rparen or throw
@@ -82,7 +83,7 @@ class FunctionName(Literal):
         elif [x for x in self.parser.tokens if isinstance(x, Equals)]:
             return Variable(name=self.value, degree=1)
 
-        raise ResolveError('Variable {} is not defined'.format(self.value))
+        raise ResolveError(f"Variable {self.value} is not defined")
 
 
 class Number(Literal):
@@ -92,7 +93,7 @@ class Number(Literal):
         try:
             return Complex(real=0, imag=value.replace('i', '')) if 'i' in value else Real(value)
         except ValueError:
-            raise SyntaxError('Wrong number: {}'.format(value))
+            raise SyntaxError(f"Wrong number: {value}")
 
 
 class Constant(Literal):
@@ -113,20 +114,20 @@ class Operator(Symbol):
         self.value = None
 
     def __repr__(self):
-        return "({} {} {})".format(self.id(), self.first, self.second)
+        return f"({self.id()} {self.first} {self.second})"
 
 
 class Plus(Operator):
     pattern = r'\+'
-    lbp = 10
+    bp = 10
 
-    def nud(self):
+    def prefix(self):
         self.first = self.parser.expression(100)
         self.second = None
         self.value = self.first
         return self.value
 
-    def led(self, left):
+    def infix(self, left):
         self.first = left
         self.second = self.parser.expression(10)
         self.value = self.first + self.second
@@ -135,15 +136,15 @@ class Plus(Operator):
 
 class Minus(Operator):
     pattern = r'-'
-    lbp = 10
+    bp = 10
 
-    def nud(self):
+    def prefix(self):
         self.first = -self.parser.expression(100)
         self.second = None
         self.value = self.first
         return self.value
 
-    def led(self, left):
+    def infix(self, left):
         self.first = left
         self.second = self.parser.expression(10)
         self.value = self.first - self.second
@@ -152,9 +153,9 @@ class Minus(Operator):
 
 class Times(Operator):
     pattern = r'\*'
-    lbp = 20
+    bp = 20
 
-    def led(self, left):
+    def infix(self, left):
         self.first = left
         self.second = self.parser.expression(20)
         self.value = self.first * self.second
@@ -163,9 +164,9 @@ class Times(Operator):
 
 class TimesMatrix(Operator):
     pattern = r'\*\*'
-    lbp = 20
+    bp = 20
 
-    def led(self, left):
+    def infix(self, left):
         self.first = left
         self.second = self.parser.expression(20)
         self.value = self.first * self.second
@@ -174,9 +175,9 @@ class TimesMatrix(Operator):
 
 class Divide(Operator):
     pattern = r'/'
-    lbp = 20
+    bp = 20
 
-    def led(self, left):
+    def infix(self, left):
         self.first = left
         self.second = self.parser.expression(20)
         self.value = self.first / self.second
@@ -185,9 +186,9 @@ class Divide(Operator):
 
 class Modulo(Operator):
     pattern = r'%'
-    lbp = 20
+    bp = 20
 
-    def led(self, left):
+    def infix(self, left):
         self.first = left
         self.second = self.parser.expression(20)
         self.value = self.first % self.second
@@ -196,9 +197,9 @@ class Modulo(Operator):
 
 class Power(Operator):
     pattern = r'\^'
-    lbp = 30
+    bp = 30
 
-    def led(self, left):
+    def infix(self, left):
         self.first = left
         self.second = self.parser.expression(25)
         self.value = self.first ** self.second
@@ -208,7 +209,7 @@ class Power(Operator):
 class LParen(Operator):
     pattern = r'\('
 
-    def nud(self):
+    def prefix(self):
         return self.parser.advance(RParen)
 
 
@@ -218,9 +219,9 @@ class RParen(Operator):
 
 class Equals(Operator):
     pattern = r'\='
-    lbp = 1
+    bp = 1
 
-    def led(self, left):
+    def infix(self, left):
         self.first = left
         self.second = self.parser.expression()
         polynomial = Polynomial(self.first) - Polynomial(self.second)
@@ -234,7 +235,7 @@ class UndefinedToken(Symbol):
     pattern = r'[^\s]+'
 
     def __init__(self, parser, value):
-        raise SyntaxError('Unknown token {}'.format(value))
+        raise SyntaxError(f"Unknown token {value}")
 
 
 # End symbol
