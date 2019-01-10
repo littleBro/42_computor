@@ -26,7 +26,6 @@ Polynomials:
 - negative rational powers (attention with 0!)
 - big degrees (bisection)
 - x^0.83
-- x/x
 """
 
 import unittest
