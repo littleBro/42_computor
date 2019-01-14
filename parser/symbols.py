@@ -5,6 +5,8 @@ bp: binding power
 prefix: value returned when the symbol isn't left preceded (i.e. in bare or prefix position, e.g. x, -5)
 infix: value returned when the symbol is left preceded (i.e. in infix or suffix position, e.g. 5 - 2, x!)
 """
+from mathematics.constants import CONSTANTS
+from mathematics.matrix import Matrix
 from mathematics.numbers import Real, Complex
 from parser.exceptions import ResolveError
 from mathematics.polynomial import Polynomial, Variable
@@ -87,7 +89,7 @@ class FunctionName(Literal):
 
 
 class Number(Literal):
-    pattern = r'[\d\.]+|[\d\.]*i'
+    pattern = r'(?:[0-9\.]+i?)|i'
 
     def clear(self, value):
         try:

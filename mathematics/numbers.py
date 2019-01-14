@@ -12,9 +12,13 @@ class Complex(Number):
     All other number types are its subclasses.
     Its real and imaginary parts are stored as python native int or float numbers
     """
-    def __init__(self, real=0, imag=0):
-        self.real = parse_number(real)
-        self.imag = parse_number(imag)
+    def __init__(self, make_from=0, real=0, imag=0):
+        if isinstance(make_from, Complex):
+            self.real = make_from.real
+            self.imag = make_from.imag
+        else:
+            self.real = parse_number(make_from or real)
+            self.imag = parse_number(imag)
 
     def is_integer(self):
         return not self.imag and is_integer(self.real)
@@ -147,19 +151,23 @@ class Complex(Number):
         return self * -1
 
     def __abs__(self):
+        if self.imag:
+            return self
         return abs(self.real)
 
     # String representation
 
     def __str__(self):
+        real = f"{self.real:g}"
+        imag = f"{abs(self.imag):g}" if abs(self.imag) != 1 else ""
+        sign = '+' if self.imag > 0 else '-'
+
         if not self.imag:
-            return f"{self.real:g}"
+            return real
         elif not self.real:
-            return f"{self.imag:g}i"
-        elif self.imag > 0:
-            return f"{self.real:g} + {self.imag:g}i"
+            return f"{sign}{imag}i"
         else:
-            return f"{self.real:g} - {abs(self.imag):g}i"
+            return f"{real} {sign} {imag}i"
 
 
 class Real(Complex):

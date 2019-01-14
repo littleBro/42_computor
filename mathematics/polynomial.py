@@ -104,7 +104,7 @@ class Polynomial:
         if len(self.variables) > 1:
             raise ResolveError("Cannot solve polynomials with multiple variables")
 
-        if len([x for x in self.terms_reduced if x.has_unsupported_degrees]) > 0:
+        if [x for x in self.terms_reduced if x.has_unsupported_degrees]:
             raise ResolveError("Cannot solve polynomials with non-natural degrees")
 
         if self.degree == 0:
@@ -157,7 +157,7 @@ class Polynomial:
                 Term(coeff=coeff / other, variables=variables) for coeff, variables in self.terms
             ])
         elif isinstance(other, Polynomial):
-            if len(other.terms_reduced) == 0:
+            if not other.terms_reduced:
                 raise ZeroDivisionError()
             if len(other.terms_reduced) > 1:
                 raise MathError('Cannot divide by a polynomial with multiple terms')
@@ -183,13 +183,20 @@ class Polynomial:
     # String representation
 
     def __str__(self):
-        return ' '.join(['{sign}{space}{coeff}{asterisk}{variables}'.format(
-            sign='-' if term.coeff < 0 else '' if index == 0 else '+',
-            space='' if index == 0 else ' ',
-            coeff=f"{abs(term.coeff):g}" if not (abs(term.coeff) == 1 and term.variables and term.degree != 0) else '',
-            asterisk=' * ' if abs(term.coeff) != 1 and term.variables and term.degree != 0 else '',
-            variables=' * '.join([str(variable) for variable in term.variables_reduced]),
-        ) for index, term in enumerate(self.terms_reduced)]) or '0'
+        chunks = []
+        for index, term in enumerate(self.terms_reduced):
+            if Complex(term.coeff).imag:
+                sign = '+' if index else ''
+                coeff = [f'({term.coeff})']
+            else:
+                sign = '-' if not Complex(term.coeff).imag and term.coeff < 0 else '+' if index else ''
+                coeff = [] if abs(term.coeff) == 1 and term.variables_reduced else [f'{abs(term.coeff):g}']
+
+            variables = ' * '.join(coeff + [f'{variable}' for variable in term.variables_reduced])
+
+            chunks.append(f"{sign}{' ' if index else ''}{variables}")
+
+        return ' '.join(chunks) or '0'
 
     @property
     def solution_text(self):

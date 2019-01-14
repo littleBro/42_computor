@@ -3,8 +3,8 @@ Computor
 
 A simple yet powerful mathematics expressions interpreter made for the 42 software engineering school.
 
-Computor_v1
------------
+Installation
+------------
 
 Prepare: 
 ```
@@ -14,6 +14,9 @@ brew install python
 pip3 install virtualenv
 virtualenv venv
 ```
+
+Computor_v1
+-----------
 
 Launch: 
 ```
@@ -35,6 +38,27 @@ Bonuses:
 - input error management
 - parentheses handling: `(2 + 3) * x ^ (1+1) = 0`
 - division operator: `2/3 * x = x^2 / 10`
+- products and powers of polynomials: `(x + 5)^2 + (x - 5)^2 = 0`
+
+Computor_v2
+-----------
+
+Launch: 
+```
+# Activate virtualenv
+source venv/bin/activate
+
+# With an argument
+./computor_v2.py "x^2 = 4"
+
+# Interactive mode
+./computor_v2.py
+```
+
+Tests: `./tests_v2.py`
+
+Bonuses:
+- expression as argument
 - products and powers of polynomials: `(x + 5)^2 + (x - 5)^2 = 0`
 
 Parsing
