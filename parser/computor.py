@@ -25,7 +25,6 @@ class Computor:
     def __init__(self, symbols=default_symbols, functions=default_functions):
         self.symbols = {x.id(): x for x in symbols}
         self.functions = functions
-        self.token_regex = r'\s*' + r'|'.join([f'(?P<{x.id()}>{x.pattern})' for x in symbols])
         self.tokens = []
         self.variables = {}
         self.text = None
@@ -39,10 +38,12 @@ class Computor:
         - self.tokens — list of all token instances found in the text
         - self.tokens_queue — state-maintaining iterator through self.tokens
         """
+        # regex will be like r'\s*(?P<NAME>[a-zA-Z]+)|(?P<NUMBER>(?:[0-9\.]+i?)|i)|(?P<PLUS>\+)|(?P<MINUS>-)'
+        token_regex = r'\s*' + r'|'.join([f'(?P<{x.id()}>{x.pattern})' for x in self.symbols.values()])
         try:
             self.tokens = [
                 self.symbols[match.lastgroup](self, match.group(match.lastgroup))
-                for match in re.finditer(self.token_regex, self.text)
+                for match in re.finditer(token_regex, self.text)
             ] + [End()]
 
             self.tokens_queue = (token for token in self.tokens)
@@ -61,11 +62,11 @@ class Computor:
         self.current_token = next(self.tokens_queue)
         return expr
 
-    def expression(self, prev_bp=0):
+    def expression(self, previous_bp=0):
         """
         Recursive parsing and interpreting function.
 
-        The prev_bp (previous binding power) parameter means the precedence level of the previous context.
+        The previous_bp (previous binding power) parameter means the precedence level of the previous context.
         We will continue interpreting tokens while current binding power stays higher than the previous,
         then return the result to caller.
 
@@ -86,7 +87,7 @@ class Computor:
         t = self.current_token
         self.current_token = next(self.tokens_queue)
         left = t.prefix()
-        while prev_bp < self.current_token.bp:
+        while previous_bp < self.current_token.bp:
             t = self.current_token
             self.current_token = next(self.tokens_queue)
             left = t.infix(left)

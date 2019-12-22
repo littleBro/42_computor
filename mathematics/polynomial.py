@@ -3,7 +3,7 @@ from functools import reduce
 from itertools import groupby
 from numbers import Number
 
-from mathematics import is_integer
+from mathematics import abs, is_integer
 from mathematics.exceptions import MathError
 from mathematics.numbers import AnyRealNumber, Complex
 from parser.exceptions import ResolveError
@@ -47,20 +47,19 @@ class Polynomial:
 
     @property
     def terms_reduced(self):
-        return [term for term in [
+        sorted_terms = sorted((x for x in self.terms if x.coeff != 0), key=lambda x: x.variables_reduced)
+        reduced_terms = [
             Term(coeff=reduce(lambda a, x: a + x.coeff, list(group), 0), variables=key)
-            for key, group in groupby(
-                iterable=sorted([x for x in self.terms if x.coeff != 0], key=lambda x: x.variables_reduced),
-                key=lambda x: x.variables_reduced
-            )
-        ] if term.coeff != 0]
+            for key, group in groupby(iterable=sorted_terms, key=lambda x: x.variables_reduced)
+        ]
+        return [x for x in reduced_terms if x.coeff != 0]
 
     def get_term(self, degree):
         try:
             if degree == 0:
-                return next((x for x in self.terms_reduced if not x.variables or x.variables[0].degree == 0))
+                return next(x for x in self.terms_reduced if not x.variables or x.variables[0].degree == 0)
             else:
-                return next((x for x in self.terms_reduced if x.variables and x.variables[0].degree == degree))
+                return next(x for x in self.terms_reduced if x.variables and x.variables[0].degree == degree)
         except StopIteration:
             return Term(coeff=0, variables=[])
 
@@ -70,17 +69,17 @@ class Polynomial:
 
     @property
     def variables(self):
-        return list(set([variable.name
-                         for term in self.terms_reduced
-                         for variable in term.variables]))
+        return list(set(variable.name
+                        for term in self.terms_reduced
+                        for variable in term.variables))
 
     @property
     def variables_non_zero(self):
         """Variables have been used with negative powers, so they can not be equal to zero"""
-        return list(set([variable.name
-                         for term in self.terms
-                         for variable in term.variables
-                         if variable.degree < 0]))
+        return list(set(variable.name
+                        for term in self.terms
+                        for variable in term.variables
+                        if variable.degree < 0))
 
     # Roots finding
 
@@ -104,7 +103,7 @@ class Polynomial:
         if len(self.variables) > 1:
             raise ResolveError("Cannot solve polynomials with multiple variables")
 
-        if [x for x in self.terms_reduced if x.has_unsupported_degrees]:
+        if any(x.has_unsupported_degrees for x in self.terms_reduced):
             raise ResolveError("Cannot solve polynomials with non-natural degrees")
 
         if self.degree == 0:
@@ -255,19 +254,19 @@ class Term(namedtuple('Term', ['coeff', 'variables'])):
 
     @property
     def has_unsupported_degrees(self):
-        return len([variable.degree
-                    for variable in self.variables
-                    if not is_integer(variable.degree) or variable.degree < 0]) > 0
+        return any(
+            not is_integer(variable.degree) or variable.degree < 0
+            for variable in self.variables
+        )
 
     @property
     def variables_reduced(self):
-        return [variable for variable in [
+        sorted_variables = sorted([x for x in self.variables if x.degree != 0], key=lambda x: x.name)
+        reduced_variables = [
             Variable(name=key, degree=reduce(lambda a, x: a + x.degree, list(group), 0))
-            for key, group in groupby(
-                iterable=sorted([x for x in self.variables if x.degree != 0], key=lambda x: x.name),
-                key=lambda x: x.name
-            )
-        ] if variable.degree != 0]
+            for key, group in groupby(iterable=sorted_variables, key=lambda x: x.name)
+        ]
+        return [x for x in reduced_variables if x.degree != 0]
 
     # Math operations (left- and right-hand)
 
@@ -286,9 +285,7 @@ class Term(namedtuple('Term', ['coeff', 'variables'])):
         if isinstance(other, Term):
             return Term(
                 coeff=self.coeff / other.coeff,
-                variables=self.variables + [
-                    Variable(name=x.name, degree=-x.degree) for x in other.variables
-                ]
+                variables=self.variables + [Variable(name=x.name, degree=-x.degree) for x in other.variables]
             )
         return NotImplemented
 

@@ -2,8 +2,8 @@
 Symbol classes incorporating grammar and semantics.
 
 bp: binding power
-prefix: value returned when the symbol isn't left preceded (i.e. in bare or prefix position, e.g. x, -5)
-infix: value returned when the symbol is left preceded (i.e. in infix or suffix position, e.g. 5 - 2, x!)
+prefix: value returned when the symbol isn't left preceded (in bare or prefix position, e.g. x, -5)
+infix: value returned when the symbol is left preceded (in infix or suffix position, e.g. 5 - 2, x!)
 """
 from mathematics.constants import CONSTANTS
 from mathematics.matrix import Matrix
@@ -51,7 +51,7 @@ class Name(Literal):
     def prefix(self):
         if self.value.lower() in self.parser.variables:
             return self.parser.variables[self.value.lower()]
-        elif [x for x in self.parser.tokens if isinstance(x, Equals)]:
+        elif any(isinstance(x, Equals) for x in self.parser.tokens):
             variable = Variable(name=self.value, degree=1)
             self.parser.variables[self.value.lower()] = variable
             return variable
@@ -66,7 +66,7 @@ class FunctionName(Literal):
     pattern = r'[a-zA-Z]+\('
 
     def prefix(self):
-        # Interpreting:
+        # TODO: Interpreting
         # get value from the parentheses
         # next token == rparen or throw
         # substitute, compute the body
@@ -82,7 +82,7 @@ class FunctionName(Literal):
         # store the polynomial
         if self.value in self.parser.functions:
             return self.parser.variables[self.value]
-        elif [x for x in self.parser.tokens if isinstance(x, Equals)]:
+        elif any(isinstance(x, Equals) for x in self.parser.tokens):
             return Variable(name=self.value, degree=1)
 
         raise ResolveError(f"Variable {self.value} is not defined")
@@ -99,7 +99,7 @@ class Number(Literal):
 
 
 class Constant(Literal):
-    pattern = r'i'
+    pattern = r'|'.join(CONSTANTS.keys())
 
 
 class Needle(Literal):
@@ -131,7 +131,7 @@ class Plus(Operator):
 
     def infix(self, left):
         self.first = left
-        self.second = self.parser.expression(10)
+        self.second = self.parser.expression(self.bp)
         self.value = self.first + self.second
         return self.value
 
@@ -148,7 +148,7 @@ class Minus(Operator):
 
     def infix(self, left):
         self.first = left
-        self.second = self.parser.expression(10)
+        self.second = self.parser.expression(self.bp)
         self.value = self.first - self.second
         return self.value
 
@@ -159,7 +159,7 @@ class Times(Operator):
 
     def infix(self, left):
         self.first = left
-        self.second = self.parser.expression(20)
+        self.second = self.parser.expression(self.bp)
         self.value = self.first * self.second
         return self.value
 
@@ -170,7 +170,7 @@ class TimesMatrix(Operator):
 
     def infix(self, left):
         self.first = left
-        self.second = self.parser.expression(20)
+        self.second = self.parser.expression(self.bp)
         self.value = self.first * self.second
         return self.value
 
@@ -181,7 +181,7 @@ class Divide(Operator):
 
     def infix(self, left):
         self.first = left
-        self.second = self.parser.expression(20)
+        self.second = self.parser.expression(self.bp)
         self.value = self.first / self.second
         return self.value
 
@@ -192,7 +192,7 @@ class Modulo(Operator):
 
     def infix(self, left):
         self.first = left
-        self.second = self.parser.expression(20)
+        self.second = self.parser.expression(self.bp)
         self.value = self.first % self.second
         return self.value
 
@@ -226,8 +226,7 @@ class Equals(Operator):
     def infix(self, left):
         self.first = left
         self.second = self.parser.expression()
-        polynomial = Polynomial(self.first) - Polynomial(self.second)
-        self.value = polynomial
+        self.value = Polynomial(self.first) - Polynomial(self.second)
         return self.value
 
 
